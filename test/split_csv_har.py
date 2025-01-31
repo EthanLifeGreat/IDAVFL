@@ -1,0 +1,80 @@
+import pandas as pd
+from sklearn.utils import shuffle
+from sklearn.model_selection import train_test_split
+import numpy as np
+folder_path = "../data/"
+file_name = "UCI_HAR"
+suffix = ".csv"
+test_frac = 0.2
+val_frac = 0.1
+
+data = np.loadtxt(folder_path+"UCI_HAR_Dataset.txt", dtype=np.float32)
+data_x = np.delete(data, -1, axis=1)
+data_y = data[:, [-1]] - 1
+
+x, y = shuffle(data_x, data_y, random_state=2)
+num_samples, num_features = x.shape[0], x.shape[1] - 1
+num_train_samples = int(num_samples * (1-test_frac))
+num_val_samples = int(num_samples * val_frac)
+
+__vdp_type = 4
+pivot = num_features // 2
+if __vdp_type == 1:
+    # ---------------------- even+odd
+    input_A_size = pivot
+    input_B_size = num_features - input_A_size
+    party_A_idc = range(1, num_features, 2)
+    party_B_idc = range(0, num_features, 2)
+elif __vdp_type == 2:
+    # ---------------------- odd+even
+    if num_features % 2 == 1:
+        pivot = pivot + 1
+    input_A_size = pivot
+    input_B_size = num_features - input_A_size
+    party_A_idc = range(0, num_features, 2)
+    party_B_idc = range(1, num_features, 2)
+elif __vdp_type == 3:
+    # ----------------------
+    input_B_size = 50
+    input_A_size = num_features - input_B_size
+    party_B_idc = range(input_B_size)
+    party_A_idc = range(input_B_size, num_features)
+elif __vdp_type == 4:
+    # ----------------------
+    input_A_size = 30
+    input_B_size = num_features - input_A_size
+    party_A_idc = range(input_A_size)
+    party_B_idc = range(input_A_size, num_features)
+elif __vdp_type == 5:
+    # ---------------------- 23 - baseline
+    run_type = 'CV_baseline'
+    input_A_size = 23
+    input_B_size = num_features - input_A_size
+    party_A_idc = range(input_A_size)
+    party_B_idc = range(input_B_size, num_features)
+else:
+    raise ValueError('__vdp_type value error!')
+
+
+data_frame_y = pd.DataFrame(y, columns=['y'], dtype='int')
+data_frame_x = pd.DataFrame(x[:, 1:], columns=['x{}'.format(i) for i in range(num_features)])
+data_frame_x_guest = data_frame_x.iloc[:, party_A_idc]
+data_frame_host = data_frame_x.iloc[:, party_B_idc]
+data_frame_guest = pd.concat([data_frame_y, data_frame_x_guest], axis=1)
+data_frame_host_train = data_frame_host.iloc[num_val_samples:num_train_samples, :]
+data_frame_host_validate = data_frame_host.iloc[:num_val_samples, :]
+data_frame_host_test = data_frame_host.iloc[num_train_samples:, :]
+data_frame_guest_train = data_frame_guest.iloc[num_val_samples:num_train_samples, :]
+data_frame_guest_validate = data_frame_guest.iloc[:num_val_samples, :]
+data_frame_guest_test = data_frame_guest.iloc[num_train_samples:, :]
+
+data_frame_host_train.to_csv(folder_path+'my_'+file_name+'_host_train'+suffix, index=True, index_label='id')
+data_frame_host_validate.to_csv(folder_path+'my_'+file_name+'_host_validate'+suffix, index=True, index_label='id')
+data_frame_host_test.to_csv(folder_path+'my_'+file_name+'_host_test'+suffix, index=True, index_label='id')
+data_frame_guest_train.to_csv(folder_path+'my_'+file_name+'_guest_train'+suffix, index=True, index_label='id')
+data_frame_guest_validate.to_csv(folder_path+'my_'+file_name+'_guest_validate'+suffix, index=True, index_label='id')
+data_frame_guest_test.to_csv(folder_path+'my_'+file_name+'_guest_test'+suffix, index=True, index_label='id')
+
+# data_frame_host.to_csv(folder_path+'my_'+file_name+'_host'+suffix, index=True)
+# data_frame_guest.to_csv(folder_path+'my_'+file_name+'_guest'+suffix, index=True)
+

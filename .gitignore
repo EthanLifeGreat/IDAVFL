@@ -1,0 +1,10 @@
+*.ckpt
+data/
+record/
+__pycache__/
+*/__pycache__/
+*.py[cod]
+venv/
+.env/
+.pytest_cache/
+.coverage
