@@ -26,4 +26,3 @@ Utils:
 args: define algorithm parameters for different data-sets
 main: RUN non-dynamic comparing algorithms
 
-P.S. The HAR dataset is too large to upload. 
