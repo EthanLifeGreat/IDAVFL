@@ -4,6 +4,7 @@ record/
 __pycache__/
 */__pycache__/
 *.py[cod]
+.idea/
 venv/
 .env/
 .pytest_cache/
